@@ -47,13 +47,13 @@ public class PointsCommand extends HasSubcommands
 			User user = event.getUser();
 			if (user.isBot() || user.isSystem())
 			{
-				event.reply("你不能這樣做！").queue();
+				event.reply("你不能這樣做！").setEphemeral(true).queue();
 				return;
 			}
 
 			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
 
-			if (!event.getOption("detail", false, OptionMapping::getAsBoolean))
+			if (!event.getOption("detail", false, OptionMapping::getAsBoolean)) //不顯示細節
 			{
 				event.reply("你目前有 " + playerData.getPoints() + " 點").queue();
 				return;
@@ -152,16 +152,123 @@ public class PointsCommand extends HasSubcommands
 
 	private static class MineCommand implements ICommand
 	{
+		private static final int COOLDOWN = 3 * 60;
+
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			event.reply("挖礦功能正在趕工中！").setEphemeral(true).queue();
+			/*
+			鑽石 5%
+			金礦 10%
+			鐵礦 15%
+			煤炭 25%
+			石頭 30%
+			空氣 10%
+			神秘彩蛋 0.1%
+			阿姆斯特朗炫風砲 0.01%
+			暗夜 5% - 0.1% - 0.01% = 4.89%
+			*/
+
+			User user = event.getUser();
+			if (user.isBot() || user.isSystem())
+			{
+				event.reply("你不能這樣做！").setEphemeral(true).queue();
+				return;
+			}
+
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
+			GuildPointsHandle.MineData mineData = GuildPointsHandle.getMineData(user.getIdLong());
+
+			long now = System.currentTimeMillis() / 1000; //現在的秒數
+			long lastMine = mineData.getCooldown(); //上次挖礦的秒數
+			long difference = now - lastMine; //差異
+			if (difference < COOLDOWN) //冷卻3分鐘
+			{
+				event.reply("你剛剛挖過礦了！\n請在 <t:" + (lastMine + COOLDOWN) + "> 後再試一次。").setEphemeral(true).queue();
+				return;
+			}
+			mineData.setCooldown(now); //新的冷卻
+
+			Random random = new Random();
+			int roll = random.nextInt(100);
+
+			//低機率
+			if (roll >= 95) //95 ~ 99
+			{
+				int smallChance = random.nextInt(500);
+
+				if (smallChance < 489)
+				{
+					event.reply("你挖到了 **暗夜**！\n你被偷走了 10 點！").queue();
+					playerData.subPoints(10);
+					mineData.getDarkNight().addValue();
+				}
+				else if (smallChance < 499)
+				{
+					event.reply("你挖到了 **神秘彩蛋**！\n獲得 1000 點！").queue();
+					playerData.addPoints(1000);
+					mineData.getEasterEgg().addValue();
+				}
+				else
+				{
+					event.reply("你挖到了 **阿姆斯特朗炫風砲**！\n請找暗夜，暗夜會告訴你。").queue();
+					mineData.getCannon().addValue();
+				}
+
+				return;
+			}
+
+			String oreName;
+			int give;
+			GuildPointsHandle.OreStats oreStats;
+
+			if (roll < 5) //0 ~ 4, 5%
+			{
+				oreName = "鑽石";
+				give = 150 / 5;
+				oreStats = mineData.getDiamond();
+			}
+			else if (roll < 15) //5 ~ 14, 10%
+			{
+				oreName = "金礦";
+				give = 150 / 10;
+				oreStats = mineData.getGold();
+			}
+			else if (roll < 30) //15 ~ 29, 15%
+			{
+				oreName = "鐵礦";
+				give = 150 / 15;
+				oreStats = mineData.getIron();
+			}
+			else if (roll < 55) //30 ~ 54, 25%
+			{
+				oreName = "煤炭";
+				give = 150 / 25;
+				oreStats = mineData.getCoal();
+			}
+			else if (roll < 85) //55 ~ 84, 30%
+			{
+				oreName = "石頭";
+				give = 150 / 30;
+				oreStats = mineData.getStone();
+			}
+			else //85 ~ 94, 10%
+			{
+				oreName = "空氣";
+				give = 0;
+				oreStats = mineData.getAir();
+			}
+
+			event.reply("你挖到了 " + oreName + "！\n獲得 " + give + " 點。").queue();
+			playerData.addPoints(give); //給予點數
+			oreStats.addValue();
 		}
 	}
 
 	private static class DailyCommand implements ICommand
 	{
 		private static final int REWARD = 100; //簽到獎勵100點
+		private static final int SECONDS_A_DAY = 60 * 60 * 24;
 
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
@@ -178,9 +285,9 @@ public class PointsCommand extends HasSubcommands
 			long now = System.currentTimeMillis() / 1000; //現在的秒數
 			long lastClaim = playerData.getDaily(); //上次簽到的秒數
 			long difference = now - lastClaim; //差異
-			if (difference < 86400) //一天86400秒
+			if (difference < SECONDS_A_DAY) //一天86400秒
 			{
-				event.reply("你今天已經簽到過了！\n請在 <t:" + (lastClaim + 86400) + "> 後再試一次。").setEphemeral(true).queue();
+				event.reply("你今天已經簽到過了！\n請在 <t:" + (lastClaim + SECONDS_A_DAY) + "> 後再試一次。").setEphemeral(true).queue();
 				return;
 			}
 

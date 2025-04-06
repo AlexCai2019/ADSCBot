@@ -31,6 +31,8 @@ public class CommandEvent extends ListenerAdapter
 	@Override
 	public void onSlashCommandInteraction(@NonNull SlashCommandInteractionEvent event)
 	{
-		commandMap.get(event.getName()).commandProcess(event);
+		ICommand command = commandMap.get(event.getName());
+		if (command != null)
+			command.commandProcess(event);
 	}
 }
