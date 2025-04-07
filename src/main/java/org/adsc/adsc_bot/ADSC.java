@@ -10,10 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.adsc.adsc_bot.commands.PointsCommand;
-import org.adsc.adsc_bot.events.CommandEvent;
-import org.adsc.adsc_bot.events.MessageEvent;
-import org.adsc.adsc_bot.events.ReactionEvent;
-import org.adsc.adsc_bot.events.SessionEvent;
+import org.adsc.adsc_bot.events.*;
 import org.adsc.adsc_bot.utilties.FileHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +18,12 @@ import org.slf4j.LoggerFactory;
 public class ADSC
 {
 	private static final Logger logger = LoggerFactory.getLogger(ADSC.class);
+
+	private static JDA jda;
+	public static JDA getJDA()
+	{
+		return jda;
+	}
 
 	public static void main(String[] args) throws InterruptedException
 	{
@@ -33,8 +36,13 @@ public class ADSC
 
 		//Java Discord API
 		logger.info("機器人上線！");
-		JDA jda = JDABuilder.createDefault(token) //啟動機器人
-							.addEventListeners(new SessionEvent(), new ReactionEvent(), new MessageEvent(), new CommandEvent())
+		jda = JDABuilder.createDefault(token) //啟動機器人
+							.addEventListeners(
+									new SessionEvent(),
+									new ReactionEvent(),
+									new ChangeNameEvent(),
+									new MessageEvent(),
+									new CommandEvent())
 							.enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS) //機器人可讀取訊息和查看伺服器成員
 							.setMemberCachePolicy(MemberCachePolicy.ALL)
 							.build();
@@ -43,16 +51,14 @@ public class ADSC
 			.addCommands(
 				Commands.slash(PointsCommand.POINTS, "點數")
 						.addSubcommands(
-								new SubcommandData(PointsCommand.VIEW, "檢視點數")
-										.setDescription("檢視你目前擁有的點數和記錄")
+								new SubcommandData(PointsCommand.VIEW, "檢視你目前擁有的點數和記錄")
 										.addOption(OptionType.BOOLEAN, "detail", "顯示細節", false, false),
-								new SubcommandData(PointsCommand.BET, "賭點數")
-										.setDescription("賭上點數")
+								new SubcommandData(PointsCommand.BET, "賭上點數")
 										.addOption(OptionType.STRING, "bet", "賭上的點數，可以是數字或%數", true, false),
-								new SubcommandData(PointsCommand.MINE, "挖礦")
-										.setDescription("隨機挖礦"),
-								new SubcommandData(PointsCommand.DAILY, "每日簽到")
-										.setDescription("簽到獲得點數")),
+								new SubcommandData(PointsCommand.MINE, "隨機挖礦"),
+								new SubcommandData(PointsCommand.DAILY, "每日簽到，獲得點數"),
+								new SubcommandData(PointsCommand.RANK, "排名")
+										.addOption(OptionType.INTEGER, "page", "頁數", false, false)),
 				Commands.slash("shutdown", "關閉機器人")
 						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)))
 			.queue(); //添加指令

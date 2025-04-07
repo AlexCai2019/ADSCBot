@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.adsc.adsc_bot.utilties.GuildPointsHandle;
 
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -16,15 +17,17 @@ public class PointsCommand extends HasSubcommands
 	public static final String BET = "bet";
 	public static final String MINE = "mine";
 	public static final String DAILY = "daily";
+	public static final String RANK = "rank";
 
 	public PointsCommand()
 	{
-		super(4);
+		super(5);
 
 		subcommands.put(VIEW, new ViewCommand());
 		subcommands.put(BET, new BetCommand());
 		subcommands.put(MINE, new MineCommand());
 		subcommands.put(DAILY, new DailyCommand());
+		subcommands.put(RANK, new RankCommand());
 	}
 
 	private int useTime = 0;
@@ -144,9 +147,9 @@ public class PointsCommand extends HasSubcommands
 				isShowHandString = isShowHand ? "\n小賭怡情，大賭傷身。" : "";
 			}
 
-			event.reply("你賭上 " + String.format("%,d", bet) + " 點後" + isWonString +
-					"\n你現在有 " + String.format("%,d", nowHave + bet) + " 點。" + isShowHandString).queue();
 			playerData.addGame(bet, isWon, isShowHand); //紀錄下這局
+			event.reply("你賭上 " + String.format("%,d", bet) + " 點後" + isWonString +
+					"\n你現在有 " + String.format("%,d", playerData.getPoints()) + " 點。" + isShowHandString).queue();
 		}
 	}
 
@@ -176,15 +179,16 @@ public class PointsCommand extends HasSubcommands
 				return;
 			}
 
-			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
-			GuildPointsHandle.MineData mineData = GuildPointsHandle.getMineData(user.getIdLong());
+			long userID = user.getIdLong();
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(userID);
+			GuildPointsHandle.MineData mineData = GuildPointsHandle.getMineData(userID);
 
 			long now = System.currentTimeMillis() / 1000; //現在的秒數
 			long lastMine = mineData.getCooldown(); //上次挖礦的秒數
 			long difference = now - lastMine; //差異
 			if (difference < COOLDOWN) //冷卻3分鐘
 			{
-				event.reply("你剛剛挖過礦了！\n請在 <t:" + (lastMine + COOLDOWN) + "> 後再試一次。").setEphemeral(true).queue();
+				event.reply("你剛剛挖過礦了！\n請在 <t:" + (lastMine + COOLDOWN) + ":T> 後再試一次。").setEphemeral(true).queue();
 				return;
 			}
 			mineData.setCooldown(now); //新的冷卻
@@ -205,7 +209,7 @@ public class PointsCommand extends HasSubcommands
 				}
 				else if (smallChance < 499)
 				{
-					event.reply("你挖到了 **神秘彩蛋**！\n獲得 1000 點！").queue();
+					event.reply("# 你挖到了 神秘彩蛋！\n## 獲得 1000 點！").queue();
 					playerData.addPoints(1000);
 					mineData.getEasterEgg().addValue();
 				}
@@ -291,9 +295,26 @@ public class PointsCommand extends HasSubcommands
 				return;
 			}
 
-			event.reply("簽到成功！獲得 " + REWARD + " 點。\n你現在有 " + playerData.getPoints() + " 點。").queue();
 			playerData.addPoints(REWARD);
+			event.reply("簽到成功！獲得 " + REWARD + " 點。\n你現在有 " + playerData.getPoints() + " 點。").queue();
 			playerData.setDaily(now);
+		}
+	}
+
+	private static class RankCommand implements ICommand
+	{
+		@Override
+		public void commandProcess(SlashCommandInteractionEvent event)
+		{
+			User user = event.getUser();
+			if (user.isBot() || user.isSystem())
+			{
+				event.reply("你不能這樣做！").setEphemeral(true).queue();
+				return;
+			}
+
+			//page從1開始 預設1
+			event.reply(GuildPointsHandle.getRankString(user.getIdLong(), event.getOption("page", 1, OptionMapping::getAsInt))).queue();
 		}
 	}
 }
