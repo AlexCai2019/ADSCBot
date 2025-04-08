@@ -1,6 +1,7 @@
 package org.adsc.adsc_bot.events;
 
 import lombok.NonNull;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.adsc.adsc_bot.commands.PointsCommand;
@@ -32,7 +33,16 @@ public class CommandEvent extends ListenerAdapter
 	public void onSlashCommandInteraction(@NonNull SlashCommandInteractionEvent event)
 	{
 		ICommand command = commandMap.get(event.getName());
-		if (command != null)
-			command.commandProcess(event);
+		if (command == null)
+			return;
+
+		User user = event.getUser();
+		if (user.isBot() || user.isSystem())
+		{
+			event.reply("你不能這樣做！").setEphemeral(true).queue();
+			return;
+		}
+
+		command.commandProcess(event);
 	}
 }

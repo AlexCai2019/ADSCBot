@@ -1,11 +1,9 @@
 package org.adsc.adsc_bot.commands;
 
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.adsc.adsc_bot.utilties.GuildPointsHandle;
 
-import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -47,14 +45,7 @@ public class PointsCommand extends HasSubcommands
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			User user = event.getUser();
-			if (user.isBot() || user.isSystem())
-			{
-				event.reply("你不能這樣做！").setEphemeral(true).queue();
-				return;
-			}
-
-			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(event.getUser().getIdLong());
 
 			if (!event.getOption("detail", false, OptionMapping::getAsBoolean)) //不顯示細節
 			{
@@ -84,14 +75,7 @@ public class PointsCommand extends HasSubcommands
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			User user = event.getUser();
-			if (user.isBot() || user.isSystem())
-			{
-				event.reply("你不能這樣做！").setEphemeral(true).queue();
-				return;
-			}
-
-			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(event.getUser().getIdLong());
 			long nowHave = playerData.getPoints();
 
 			String betString = event.getOption("bet", "", OptionMapping::getAsString);
@@ -172,21 +156,13 @@ public class PointsCommand extends HasSubcommands
 			暗夜 5% - 0.1% - 0.01% = 4.89%
 			*/
 
-			User user = event.getUser();
-			if (user.isBot() || user.isSystem())
-			{
-				event.reply("你不能這樣做！").setEphemeral(true).queue();
-				return;
-			}
-
-			long userID = user.getIdLong();
+			long userID = event.getUser().getIdLong();
 			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(userID);
 			GuildPointsHandle.MineData mineData = GuildPointsHandle.getMineData(userID);
 
 			long now = System.currentTimeMillis() / 1000; //現在的秒數
 			long lastMine = mineData.getCooldown(); //上次挖礦的秒數
-			long difference = now - lastMine; //差異
-			if (difference < COOLDOWN) //冷卻3分鐘
+			if (now - lastMine < COOLDOWN) //冷卻3分鐘
 			{
 				event.reply("你剛剛挖過礦了！\n請在 <t:" + (lastMine + COOLDOWN) + ":T> 後再試一次。").setEphemeral(true).queue();
 				return;
@@ -203,19 +179,19 @@ public class PointsCommand extends HasSubcommands
 
 				if (smallChance < 489)
 				{
-					event.reply("你挖到了 **暗夜**！\n你被偷走了 10 點！").queue();
 					playerData.subPoints(10);
 					mineData.getDarkNight().addValue();
+					event.reply("你挖到了 **暗夜**！\n你被偷走了 10 點！\n你現在有 " + String.format("%,d", playerData.getPoints()) + " 點。").queue();
 				}
 				else if (smallChance < 499)
 				{
-					event.reply("# 你挖到了 神秘彩蛋！\n## 獲得 1000 點！").queue();
 					playerData.addPoints(1000);
 					mineData.getEasterEgg().addValue();
+					event.reply("# 你挖到了 神秘彩蛋！\n## 獲得 1000 點！\n你現在有 " + String.format("%,d", playerData.getPoints()) + " 點。").queue();
 				}
 				else
 				{
-					event.reply("你挖到了 **阿姆斯特朗炫風砲**！\n請找暗夜，暗夜會告訴你。").queue();
+					event.reply("# 你挖到了 阿姆斯特朗炫風砲！\n## 請找暗夜，暗夜會告訴你。").queue();
 					mineData.getCannon().addValue();
 				}
 
@@ -263,9 +239,9 @@ public class PointsCommand extends HasSubcommands
 				oreStats = mineData.getAir();
 			}
 
-			event.reply("你挖到了 " + oreName + "！\n獲得 " + give + " 點。").queue();
 			playerData.addPoints(give); //給予點數
 			oreStats.addValue();
+			event.reply("你挖到了 " + oreName + "！\n獲得 " + give + " 點。\n你現在有 " + String.format("%,d", playerData.getPoints()) + " 點。").queue();
 		}
 	}
 
@@ -277,26 +253,18 @@ public class PointsCommand extends HasSubcommands
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			User user = event.getUser();
-			if (user.isBot() || user.isSystem())
-			{
-				event.reply("你不能這樣做！").setEphemeral(true).queue();
-				return;
-			}
-
-			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(user.getIdLong());
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(event.getUser().getIdLong());
 
 			long now = System.currentTimeMillis() / 1000; //現在的秒數
 			long lastClaim = playerData.getDaily(); //上次簽到的秒數
-			long difference = now - lastClaim; //差異
-			if (difference < SECONDS_A_DAY) //一天86400秒
+			if (now - lastClaim < SECONDS_A_DAY) //一天86400秒
 			{
 				event.reply("你今天已經簽到過了！\n請在 <t:" + (lastClaim + SECONDS_A_DAY) + "> 後再試一次。").setEphemeral(true).queue();
 				return;
 			}
 
 			playerData.addPoints(REWARD);
-			event.reply("簽到成功！獲得 " + REWARD + " 點。\n你現在有 " + playerData.getPoints() + " 點。").queue();
+			event.reply("簽到成功！獲得 " + REWARD + " 點。\n你現在有 " + String.format("%,d", playerData.getPoints()) + " 點。").queue();
 			playerData.setDaily(now);
 		}
 	}
@@ -306,15 +274,9 @@ public class PointsCommand extends HasSubcommands
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			User user = event.getUser();
-			if (user.isBot() || user.isSystem())
-			{
-				event.reply("你不能這樣做！").setEphemeral(true).queue();
-				return;
-			}
-
 			//page從1開始 預設1
-			event.reply(GuildPointsHandle.getRankString(user.getIdLong(), event.getOption("page", 1, OptionMapping::getAsInt))).queue();
+			event.reply(GuildPointsHandle.getRankString( event.getUser().getIdLong(),
+					event.getOption("page", 1, OptionMapping::getAsInt))).queue();
 		}
 	}
 }

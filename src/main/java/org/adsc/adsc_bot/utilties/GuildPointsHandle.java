@@ -3,6 +3,8 @@ package org.adsc.adsc_bot.utilties;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import org.adsc.adsc_bot.ADSC;
 
 import java.util.ArrayList;
@@ -230,10 +232,34 @@ public final class GuildPointsHandle
 			setPoints(points - sub);
 		}
 
-		public void setPoints(long points)
+		private static final long ROLE_CHANGE_GAP = 100000;
+		public void setPoints(long newValue)
 		{
-			this.points = points;
-			changed = true;
+			changed = true; //有更動
+
+			long oldValue = points; //舊數值
+			points = newValue;
+
+			boolean less = newValue < ROLE_CHANGE_GAP;
+			if ((oldValue < ROLE_CHANGE_GAP) == less) //沒有跨過門檻
+				return;
+
+			Guild adsc = ADSC.getJDA().getGuildById(Constants.SERVER_ID);
+			if (adsc == null)
+				return;
+
+			Role godOfGamblersRole = adsc.getRoleById(Constants.GOD_OF_GAMBLERS_ROLE_ID); //賭神身分組
+			if (godOfGamblersRole == null) //找不到賭神身分組
+				return;
+
+			adsc.retrieveMemberById(userID).queue(member -> //根據userID 從創聯中找到這名成員
+			{
+				boolean hasRole = member.getRoles().contains(godOfGamblersRole);
+				if (!less && !hasRole) //大於等於ROLE_CHANGE_GAP 且沒有身分組
+					adsc.addRoleToMember(member, godOfGamblersRole).queue(); //給予賭神身分組
+				else if (less && hasRole) //小於ROLE_CHANGE_GAP 且有身分組
+					adsc.removeRoleFromMember(member, godOfGamblersRole).queue(); //剝奪賭神身分組
+			});
 		}
 	}
 
