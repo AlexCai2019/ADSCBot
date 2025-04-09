@@ -45,11 +45,39 @@ public class PointsCommand extends HasSubcommands
 		@Override
 		public void commandProcess(SlashCommandInteractionEvent event)
 		{
-			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(event.getUser().getIdLong());
+			String category = event.getOption("category", "points", OptionMapping::getAsString);
+			boolean detail = event.getOption("detail", false, OptionMapping::getAsBoolean);
+			long userID = event.getUser().getIdLong();
 
-			if (!event.getOption("detail", false, OptionMapping::getAsBoolean)) //不顯示細節
+			if ("mine".equals(category))
 			{
-				event.reply("你目前有 " + playerData.getPoints() + " 點").queue();
+				GuildPointsHandle.MineData mineData = GuildPointsHandle.getMineData(userID);
+
+				if (!detail)
+				{
+					event.reply("你挖過 " + String.format("%,d", mineData.getTotalMine()) + " 次礦。").queue();
+					return;
+				}
+
+				event.reply("你挖過 " + String.format("%,d", mineData.getTotalMine()) + " 次礦。\n" +
+						"- 鑽石 " + String.format("%,d", mineData.getDiamond().getValue()) + " 次\n" +
+						"- 金礦 " + String.format("%,d", mineData.getGold().getValue()) + " 次\n" +
+						"- 鐵礦 " + String.format("%,d", mineData.getIron().getValue()) + " 次\n" +
+						"- 煤炭 " + String.format("%,d", mineData.getCoal().getValue()) + " 次\n" +
+						"- 石頭 " + String.format("%,d", mineData.getStone().getValue()) + " 次\n" +
+						"- 空氣 " + String.format("%,d", mineData.getAir().getValue()) + " 次\n" +
+						"- 神秘彩蛋 " + String.format("%,d", mineData.getEasterEgg().getValue()) + " 次\n" +
+						"- 阿姆斯特朗炫風砲 " + String.format("%,d", mineData.getCannon().getValue()) + " 次\n" +
+						"- 暗夜 " + String.format("%,d", mineData.getDarkNight().getValue()) + " 次").queue();
+				return;
+			}
+
+			//category是points
+			GuildPointsHandle.PlayerData playerData = GuildPointsHandle.getPointsData(userID);
+
+			if (!detail) //不顯示細節
+			{
+				event.reply("你目前有 " + String.format("%,d", playerData.getPoints()) + " 點。").queue();
 				return;
 			}
 
@@ -57,13 +85,13 @@ public class PointsCommand extends HasSubcommands
 			int lost = playerData.getLost();
 			int showHandWon = playerData.getShowHandWon();
 			int showHandLost = playerData.getShowHandLost();
-			event.reply("你目前有 " + playerData.getPoints() + " 點\n" +
+			event.reply("你目前有 " +  String.format("%,d", playerData.getPoints()) + " 點。\n" +
 					"- 賭了 " + (won + lost) + " 次\n" +
-						" - 贏了 " + won + " 次 賺了 " + playerData.getEarned() + " 點\n" +
-						" - 輸了 " + lost + " 次 賠了 " + playerData.getPaid() + " 點\n" +
+						" - 贏了 " + won + " 次，賺了 " + String.format("%,d", playerData.getEarned()) + " 點\n" +
+						" - 輸了 " + lost + " 次，賠了 " + String.format("%,d", playerData.getPaid()) + " 點\n" +
 						" - 梭哈了 " + (showHandWon + showHandLost) + " 次\n" +
-							"  - 贏了 " + showHandWon + " 次 賺了 " +  playerData.getShowHandEarned() +" 點\n" +
-							"  - 輸了 " + showHandLost + " 次 賠了 " + playerData.getShowHandPaid() + " 點").queue();
+							"  - 贏了 " + showHandWon + " 次，賺了 " +  String.format("%,d", playerData.getShowHandEarned()) +" 點\n" +
+							"  - 輸了 " + showHandLost + " 次，賠了 " + String.format("%,d", playerData.getShowHandPaid()) + " 點").queue();
 		}
 	}
 

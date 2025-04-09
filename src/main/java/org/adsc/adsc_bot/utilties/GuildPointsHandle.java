@@ -109,10 +109,9 @@ public final class GuildPointsHandle
 
 		List<PlayerData> ranking = sortedPointsList.subList(startElement, endElement); //要查看的那一頁
 		PlayerData myData = getPointsData(userID);
-		long points = myData.points; //本使用者擁有的點數
 
 		StringBuilder rankBuilder = new StringBuilder("```ansi\n點數排名\n--------------------\n你是第 \u001B[36m")
-				.append(listBinarySearch(points)).append("\u001B[0m 名，擁有 \u001B[36m")
+				.append(listBinarySearch(myData.points)).append("\u001B[0m 名，擁有 \u001B[36m")
 				.append(String.format("%,d", myData.points)).append("\u001B[0m 點。\n\n");
 
 		for (int i = 0, add = page * 10 - 9, rankingSize = ranking.size(); i < rankingSize; i++) //add = (page - 1) * 10 + 1
@@ -252,7 +251,7 @@ public final class GuildPointsHandle
 			if (godOfGamblersRole == null) //找不到賭神身分組
 				return;
 
-			adsc.retrieveMemberById(userID).queue(member -> //根據userID 從創聯中找到這名成員
+			adsc.retrieveMemberById(userID).queue(member -> //根據userID 從群組中找到這名成員
 			{
 				boolean hasRole = member.getRoles().contains(godOfGamblersRole);
 				if (!less && !hasRole) //大於等於ROLE_CHANGE_GAP 且沒有身分組
@@ -305,6 +304,14 @@ public final class GuildPointsHandle
 			this.cannon.setValue(cannon);
 			this.darkNight.setValue(darkNight);
 			this.cooldown = cooldown;
+		}
+
+		public int getTotalMine()
+		{
+			int totalMine = 0;
+			for (OreStats stats : allStats)
+				totalMine += stats.value;
+			return totalMine;
 		}
 	}
 

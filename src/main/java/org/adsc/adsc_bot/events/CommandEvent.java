@@ -23,7 +23,7 @@ public class CommandEvent extends ListenerAdapter
 		{
 			long userID = event.getUser().getIdLong();
 			if (userID == Constants.AC_USER_ID || userID == Constants.DARK_NIGHT_USER_ID)
-				event.reply("關閉中").queue(hook -> event.getJDA().shutdown());
+				event.reply("關閉中").queue(hook -> event.getJDA().shutdownNow());
 			else
 				event.reply("Hey! 你不能這樣做!").queue();
 		});
