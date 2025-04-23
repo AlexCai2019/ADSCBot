@@ -4,6 +4,7 @@ import lombok.NonNull;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.adsc.adsc_bot.commands.ClearMessageCommand;
 import org.adsc.adsc_bot.commands.PointsCommand;
 import org.adsc.adsc_bot.commands.ICommand;
 import org.adsc.adsc_bot.utilties.Constants;
@@ -18,6 +19,7 @@ public class CommandEvent extends ListenerAdapter
 	public CommandEvent()
 	{
 		commandMap.put(PointsCommand.POINTS, new PointsCommand());
+		commandMap.put(ClearMessageCommand.CLEAR_MESSAGE, new ClearMessageCommand());
 
 		commandMap.put("shutdown", event ->
 		{

@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.adsc.adsc_bot.commands.ClearMessageCommand;
 import org.adsc.adsc_bot.commands.PointsCommand;
 import org.adsc.adsc_bot.events.*;
 import org.adsc.adsc_bot.utilties.FileHandle;
@@ -81,6 +83,19 @@ public class ADSC
 										.addOptions(new OptionData(OptionType.INTEGER, "page", "Page to show", false, false)
 												.setNameLocalization(DiscordLocale.CHINESE_TAIWAN, "頁數")
 												.setDescriptionLocalization(DiscordLocale.CHINESE_TAIWAN, "顯示的頁數"))),
+				Commands.slash(ClearMessageCommand.CLEAR_MESSAGE, "清除訊息")
+						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
+						.setContexts(InteractionContextType.GUILD)
+						.addOptions(
+								new OptionData(OptionType.INTEGER, "counts", "Messages counts that are going to be deleted", true, false)
+										.setNameLocalization(DiscordLocale.CHINESE_TAIWAN, "數量")
+										.setDescriptionLocalization(DiscordLocale.CHINESE_TAIWAN, "要刪除的訊息數量"),
+								new OptionData(OptionType.USER, "target", "Target user", false, false)
+										.setNameLocalization(DiscordLocale.CHINESE_TAIWAN, "目標")
+										.setDescriptionLocalization(DiscordLocale.CHINESE_TAIWAN, "目標玩家"),
+								new OptionData(OptionType.STRING, "target_id", "Target user ID", false, false)
+										.setNameLocalization(DiscordLocale.CHINESE_TAIWAN, "目標id")
+										.setDescriptionLocalization(DiscordLocale.CHINESE_TAIWAN, "目標玩家ID")),
 				Commands.slash("shutdown", "關閉機器人")
 						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)))
 			.queue(); //添加指令
