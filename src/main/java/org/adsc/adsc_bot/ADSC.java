@@ -47,7 +47,9 @@ public class ADSC
 									new ReactionEvent(),
 									new ChangeNameEvent(),
 									new MessageEvent(),
-									new CommandEvent())
+									new CommandEvent(),
+									new ButtonEvent(),
+									new ModalEvent())
 							.enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS) //機器人可讀取訊息和查看伺服器成員
 							.setMemberCachePolicy(MemberCachePolicy.ALL)
 							.build();
