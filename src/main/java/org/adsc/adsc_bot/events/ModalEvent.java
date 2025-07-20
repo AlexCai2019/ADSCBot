@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.adsc.adsc_bot.utilties.Constants;
 
@@ -38,8 +39,10 @@ public class ModalEvent extends ListenerAdapter
 				.queue(channel ->
 				{
 					channel.sendMessage(user.getAsMention() + " 開啟了問題單，請靜待管理員 <@" + Constants.DARK_NIGHT_USER_ID + "> 和 <@" + Constants.AC_USER_ID + "> 協助處理。\n" +
-							"Minecraft ID：`" + minecraftID.getAsString() + "`\n" +
-							"遇到的問題：" + facingProblem.getAsString()).queue();
+								"Minecraft ID：`" + minecraftID.getAsString() + "`\n" +
+								"遇到的問題：" + facingProblem.getAsString())
+							.addActionRow(Button.danger(ButtonEvent.RESOLVED_QUESTION_BUTTON, "結案"))
+							.queue();
 
 					channel.retrieveParentMessage().queue(message ->
 					{
